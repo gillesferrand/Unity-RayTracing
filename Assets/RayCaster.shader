@@ -17,8 +17,11 @@ Shader "Custom/Ray Casting" {
 		_SliceAxis3Max ("Slice along axis 3: max", Range(0,1)) = 1
 		_DataMin ("Data threshold: min", Range(0,1)) = 0
 		_DataMax ("Data threshold: max", Range(0,1)) = 1
-		// normalization of data intensity (has to be adjusted for each data set, also depends on the number of steps)
-		_Normalization ("Intensity normalization", Float) = 1 
+		_StretchPower ("Data stretch power", Range(0.1,3)) = 1  // increase it to highlight the highest data values
+		// normalization of data intensity (has to be adjusted for each data set)
+		_NormPerStep ("Intensity normalization per step", Float) = 1
+		_NormPerRay  ("Intensity normalization per ray" , Float) = 1
+		_Steps ("Max number of steps", Range(1,1024)) = 128 // should ideally be as large as data resolution, strongly affects frame rate
 	}
 
 	SubShader {
@@ -44,7 +47,10 @@ Shader "Custom/Ray Casting" {
 			float _SliceAxis2Min, _SliceAxis2Max;
 			float _SliceAxis3Min, _SliceAxis3Max;
 			float _DataMin, _DataMax;
-			float _Normalization;
+			float _StretchPower;
+			float _NormPerStep;
+			float _NormPerRay;
+			float _Steps;
 
 			// calculates intersection between a ray and a box
 			// http://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter3.htm
@@ -114,7 +120,6 @@ Shader "Custom/Ray Casting" {
 			}
 
 #define FRONT_TO_BACK // ray integration order (BACK_TO_FRONT not working when being inside the cube)
-#define STEP_CNT 128 // should ideally be at least as large as data resolution, but strongly affects frame rate
 			
 			// fragment program
 			float4 frag(frag_input i) : COLOR
@@ -144,13 +149,14 @@ Shader "Custom/Ray Casting" {
 				float3 ray_pos = pFar;
 				float3 ray_dir = pNear - pFar;
 #endif
-				float3 ray_step = normalize(ray_dir) * sqrt(3) / STEP_CNT;
+				float3 ray_step = normalize(ray_dir) * sqrt(3) / _Steps;
 //return float4(abs(ray_dir), 1);
 //return float4(length(ray_dir), length(ray_dir), length(ray_dir), 1);
 				float4 ray_col = 0;
-				for(int k = 0; k < STEP_CNT; k++)
+				for(int k = 0; k < _Steps; k++)
 				{
 					float4 voxel_col = get_data(ray_pos);
+					voxel_col.a = _NormPerStep * length(ray_step) * pow(voxel_col.a,_StretchPower);
 #ifdef FRONT_TO_BACK
 	        		//voxel_col.rgb *= voxel_col.a;
 			        //ray_col = (1.0f - ray_col.a) * voxel_col + ray_col;
@@ -164,7 +170,7 @@ Shader "Custom/Ray Casting" {
 					if (ray_pos.x < 0 || ray_pos.y < 0 || ray_pos.z < 0) break;
 					if (ray_pos.x > 1 || ray_pos.y > 1 || ray_pos.z > 1) break;
 				}
-		    	return ray_col*_Normalization;
+		    	return ray_col*_NormPerRay;
 			}
 
 			ENDCG
