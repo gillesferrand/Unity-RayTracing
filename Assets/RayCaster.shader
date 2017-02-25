@@ -1,7 +1,7 @@
 ﻿// shader that performs ray casting using a 3D texture
 // adapted from a Cg example by Nvidia
 // http://developer.download.nvidia.com/SDK/10/opengl/samples.html
-// Gilles Ferrand, University of Manitoba 2016
+// Gilles Ferrand, University of Manitoba / RIKEN, 2016–2017
 
 Shader "Custom/Ray Casting" {
 	

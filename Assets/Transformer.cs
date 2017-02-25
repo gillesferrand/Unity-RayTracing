@@ -1,10 +1,10 @@
 ﻿// transforms an object: 
-// - hold and drag primary mouse button to rotate the cube around its centre
-// - hold and drag primary mouse button to rotate the cube around the camera (useful when inside the cube)
+// - hold and drag primary   mouse button to rotate the cube around its centre
+// - hold and drag secondary mouse button to rotate the cube around the camera (useful when inside the cube)
 // - use arrow keys to translate the cube left/right and forward/backward
 // - scroll wheel to scale the cube up/down
 // adapted from various online sources
-// Gilles Ferrand, University of Manitoba 2016
+// Gilles Ferrand, University of Manitoba / RIKEN, 2016–2017
 
 using UnityEngine;
 

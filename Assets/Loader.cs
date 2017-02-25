@@ -2,7 +2,7 @@
 // (so can be de-activated after a given data cube has been converted)
 // adapted from a XNA project by Kyle Hayward 
 // http://graphicsrunner.blogspot.ca/2009/01/volume-rendering-101.html
-// Gilles Ferrand, University of Manitoba 2016
+// Gilles Ferrand, University of Manitoba / RIKEN, 2016–2017
 
 #if UNITY_EDITOR
 using UnityEditor;
