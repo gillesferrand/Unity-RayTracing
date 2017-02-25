@@ -8,13 +8,15 @@ Shader "Custom/Ray Casting" {
 	Properties {
 		// the data cube
 		[NoScaleOffset] _Data ("Data Texture", 3D) = "" {}
-		// data slicing and thresholding
-		_SliceAxis1Min ("Slice along axis 1: min", Range(0,1)) = 0
-		_SliceAxis1Max ("Slice along axis 1: max", Range(0,1)) = 1
-		_SliceAxis2Min ("Slice along axis 2: min", Range(0,1)) = 0
-		_SliceAxis2Max ("Slice along axis 2: max", Range(0,1)) = 1
-		_SliceAxis3Min ("Slice along axis 3: min", Range(0,1)) = 0
-		_SliceAxis3Max ("Slice along axis 3: max", Range(0,1)) = 1
+		_Axis ("Axes order", Vector) = (1, 2, 3) // coordinate i=0,1,2 in Unity corresponds to coordinate _Axis[i]-1 in the data
+		_TexFilling ("Data filling factors", Vector) = (1, 1, 1) // if only a fraction of the data texture is to be sampled
+		// data slicing and thresholding (X, Y, Z are user coordinates)
+		_SliceAxis1Min ("Slice along axis X: min", Range(0,1)) = 0
+		_SliceAxis1Max ("Slice along axis X: max", Range(0,1)) = 1
+		_SliceAxis2Min ("Slice along axis Y: min", Range(0,1)) = 0
+		_SliceAxis2Max ("Slice along axis Y: max", Range(0,1)) = 1
+		_SliceAxis3Min ("Slice along axis Z: min", Range(0,1)) = 0
+		_SliceAxis3Max ("Slice along axis Z: max", Range(0,1)) = 1
 		_DataMin ("Data threshold: min", Range(0,1)) = 0
 		_DataMax ("Data threshold: max", Range(0,1)) = 1
 		_StretchPower ("Data stretch power", Range(0.1,3)) = 1  // increase it to highlight the highest data values
@@ -43,6 +45,8 @@ Shader "Custom/Ray Casting" {
 			#include "UnityCG.cginc"
 
 			sampler3D _Data;
+			float3 _Axis;
+			float3 _TexFilling;
 			float _SliceAxis1Min, _SliceAxis1Max;
 			float _SliceAxis2Min, _SliceAxis2Max;
 			float _SliceAxis3Min, _SliceAxis3Max;
@@ -102,16 +106,16 @@ Shader "Custom/Ray Casting" {
 			// gets data value at a given position
 			float4 get_data(float3 pos) {
 				// sample texture (pos is normalized in [0,1])
-				float3 pos_righthanded = float3(pos.x,pos.z,pos.y);
-				//float data = tex3D(_Data, pos_righthanded).a;
-				float data = tex3Dlod(_Data, float4(pos_righthanded,0)).a;
+				float3 posTex = float3(pos[_Axis[0]-1],pos[_Axis[1]-1],pos[_Axis[2]-1]);
+				posTex = (posTex-0.5) * _TexFilling + 0.5;
+				float data = tex3Dlod(_Data, float4(posTex,0)).a;
 				// slice and threshold
-				data *= step(_SliceAxis1Min, pos.x);
-				data *= step(_SliceAxis2Min, pos.y);
-				data *= step(_SliceAxis3Min, pos.z);
-				data *= step(pos.x, _SliceAxis1Max);
-				data *= step(pos.y, _SliceAxis2Max);
-				data *= step(pos.z, _SliceAxis3Max);
+				data *= step(_SliceAxis1Min, posTex.x);
+				data *= step(_SliceAxis2Min, posTex.y);
+				data *= step(_SliceAxis3Min, posTex.z);
+				data *= step(posTex.x, _SliceAxis1Max);
+				data *= step(posTex.y, _SliceAxis2Max);
+				data *= step(posTex.z, _SliceAxis3Max);
 				data *= step(_DataMin, data);
 				data *= step(data, _DataMax);
 				// colourize
