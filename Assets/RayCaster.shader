@@ -22,10 +22,13 @@ Shader "Custom/Ray Casting" {
 	}
 
 	SubShader {
+		
+		Tags { "Queue" = "Transparent" }
 
 		Pass {
+			Blend SrcAlpha OneMinusSrcAlpha
 			Cull Off
-			ZTest Always
+			ZTest LEqual
 			ZWrite Off
 			Fog { Mode off }
 
@@ -154,8 +157,8 @@ Shader "Custom/Ray Casting" {
 					ray_col.rgb = ray_col.rgb + (1 - ray_col.a) * voxel_col.a * voxel_col.rgb;
 					ray_col.a   = ray_col.a   + (1 - ray_col.a) * voxel_col.a;
 #else
-			        //ray_col = lerp(ray_col, voxel_col, voxel_col.a);
-			        ray_col = (1-voxel_col.a)*ray_col + voxel_col.a*voxel_col;
+			        ray_col.rgb = (1-voxel_col.a)*ray_col.rgb + voxel_col.a * voxel_col.rgb;
+			        ray_col.a   = (1-voxel_col.a)*ray_col.a   + voxel_col.a;
 #endif
 					ray_pos += ray_step;
 					if (ray_pos.x < 0 || ray_pos.y < 0 || ray_pos.z < 0) break;
