@@ -98,7 +98,7 @@ Shader "Custom/Ray Casting" {
 				o.ray_d = -ObjSpaceViewDir(i.pos);
 				o.ray_o = i.pos.xyz - o.ray_d;
 				// calculate position on screen (unused)
-				o.pos = mul(UNITY_MATRIX_MVP, i.pos);
+				o.pos = UnityObjectToClipPos(i.pos);
 
 				return o;
 			}
@@ -142,8 +142,6 @@ Shader "Custom/Ray Casting" {
 			    // convert to texture space
 				pNear = pNear + 0.5;
 				pFar  = pFar  + 0.5;
-//return float4(pNear, 1);
-//return float4(pFar , 1);
 				
 			    // march along ray inside the cube, accumulating color
 #ifdef FRONT_TO_BACK
@@ -154,8 +152,6 @@ Shader "Custom/Ray Casting" {
 				float3 ray_dir = pNear - pFar;
 #endif
 				float3 ray_step = normalize(ray_dir) * sqrt(3) / _Steps;
-//return float4(abs(ray_dir), 1);
-//return float4(length(ray_dir), length(ray_dir), length(ray_dir), 1);
 				float4 ray_col = 0;
 				for(int k = 0; k < _Steps; k++)
 				{
@@ -174,7 +170,9 @@ Shader "Custom/Ray Casting" {
 					if (ray_pos.x < 0 || ray_pos.y < 0 || ray_pos.z < 0) break;
 					if (ray_pos.x > 1 || ray_pos.y > 1 || ray_pos.z > 1) break;
 				}
-		    	return ray_col*_NormPerRay;
+				ray_col *= _NormPerRay;
+				ray_col = clamp(ray_col,0,1);
+		    	return ray_col;
 			}
 
 			ENDCG
