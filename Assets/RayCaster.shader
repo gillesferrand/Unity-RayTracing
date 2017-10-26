@@ -8,6 +8,7 @@ Shader "Custom/Ray Casting" {
 	Properties {
 		// the data cube
 		[NoScaleOffset] _Data ("Data Texture", 3D) = "" {}
+		_DataChannel ("Data Channel", Vector) = (0,0,0,1) // in which channel were the data value stored?
 		_Axis ("Axes order", Vector) = (1, 2, 3) // coordinate i=0,1,2 in Unity corresponds to coordinate _Axis[i]-1 in the data
 		_TexFilling ("Data filling factors", Vector) = (1, 1, 1) // if only a fraction of the data texture is to be sampled
 		// data slicing and thresholding (X, Y, Z are user coordinates)
@@ -45,6 +46,7 @@ Shader "Custom/Ray Casting" {
 			#include "UnityCG.cginc"
 
 			sampler3D _Data;
+			float4 _DataChannel;
 			float3 _Axis;
 			float3 _TexFilling;
 			float _SliceAxis1Min, _SliceAxis1Max;
@@ -108,7 +110,8 @@ Shader "Custom/Ray Casting" {
 				// sample texture (pos is normalized in [0,1])
 				float3 posTex = float3(pos[_Axis[0]-1],pos[_Axis[1]-1],pos[_Axis[2]-1]);
 				posTex = (posTex-0.5) * _TexFilling + 0.5;
-				float data = tex3Dlod(_Data, float4(posTex,0)).a;
+				float4 data4 = tex3Dlod(_Data, float4(posTex,0));
+				float data = _DataChannel[0]*data4.r + _DataChannel[1]*data4.g + _DataChannel[2]*data4.b + _DataChannel[3]*data4.a;
 				// slice and threshold
 				data *= step(_SliceAxis1Min, posTex.x);
 				data *= step(_SliceAxis2Min, posTex.y);
